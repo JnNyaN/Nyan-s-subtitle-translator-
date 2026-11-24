@@ -1,4 +1,3 @@
-javascript
 exports.handler = async function (event, context) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
