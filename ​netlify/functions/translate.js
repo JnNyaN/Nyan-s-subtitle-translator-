@@ -1,5 +1,5 @@
 javascript
-export const handler = async (event) => {
+exports.handler = async function (event, context) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -15,7 +15,7 @@ export const handler = async (event) => {
     return {
       statusCode: 405,
       headers: corsHeaders,
-      body: JSON.stringify({ error: { message: `Method Not Allowed (${event.httpMethod})` } }),
+      body: JSON.stringify({ error: { message: "Method Not Allowed" } }),
     };
   }
 
@@ -26,7 +26,7 @@ export const handler = async (event) => {
       return {
         statusCode: 400,
         headers: corsHeaders,
-        body: JSON.stringify({ error: { message: "Missing required fields (apiKey, modelName, requestBody)" } }),
+        body: JSON.stringify({ error: { message: "Missing required fields" } }),
       };
     }
 
@@ -49,7 +49,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: corsHeaders,
-      body: JSON.stringify({ error: { message: error.message || "Netlify Proxy Error" } }),
+      body: JSON.stringify({ error: { message: error.message || "Proxy Error" } }),
     };
   }
 };
