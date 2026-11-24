@@ -1,31 +1,33 @@
 javascript
-export default async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    });
+export const handler = async (event) => {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: corsHeaders, body: "" };
   }
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: { message: "Method Not Allowed" } }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: { message: `Method Not Allowed (${event.httpMethod})` } }),
+    };
   }
 
   try {
-    const { apiKey, modelName, requestBody } = await req.json();
+    const { apiKey, modelName, requestBody } = JSON.parse(event.body || "{}");
 
     if (!apiKey || !modelName || !requestBody) {
-      return new Response(
-        JSON.stringify({ error: { message: "Missing required fields (apiKey, modelName, requestBody)" } }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: { message: "Missing required fields (apiKey, modelName, requestBody)" } }),
+      };
     }
 
     const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -38,23 +40,16 @@ export default async (req) => {
 
     const responseText = await googleResponse.text();
 
-    return new Response(responseText, {
-      status: googleResponse.status,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return {
+      statusCode: googleResponse.status,
+      headers: corsHeaders,
+      body: responseText,
+    };
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: { message: error.message || "Netlify Proxy Error" } }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: { message: error.message || "Netlify Proxy Error" } }),
+    };
   }
 };
